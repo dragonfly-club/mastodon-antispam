@@ -1,0 +1,28 @@
+diff --git a/app/lib/activitypub/activity.rb b/app/lib/activitypub/activity.rb
+index 322f3e27a..e6c932bb5 100644
+--- a/app/lib/activitypub/activity.rb
++++ b/app/lib/activitypub/activity.rb
+@@ -176,4 +176,9 @@ class ActivityPub::Activity
+     Rails.logger.info("Rejected #{@json['type']} activity #{@json['id']} from #{@account.uri}#{@options[:relayed_through_actor] && "via #{@options[:relayed_through_actor].uri}"}")
+     nil
+   end
++
++  def reject_spam!
++    Rails.logger.info("Rejected 荒らし.com spam from #{@account.uri} with content #{@object['content']}")
++    nil
++  end
+ end
+diff --git a/app/lib/activitypub/activity/create.rb b/app/lib/activitypub/activity/create.rb
+index b3036e205..a87aa07df 100644
+--- a/app/lib/activitypub/activity/create.rb
++++ b/app/lib/activitypub/activity/create.rb
+@@ -47,6 +47,9 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
+   end
+
+   def create_status
++    if @object['tag'].present? && @object['tag'].is_a?(Array) && @object['tag'].count { |tag| tag['type'] == 'Mention' } > 3 && @object['content'].include?('<a href="https://荒らし.com')
++      return reject_spam!
++    end
+     return reject_payload! if unsupported_object_type? || non_matching_uri_hosts?(@account.uri, object_uri) || tombstone_exists? || !related_to_local_activity?
+
+     with_redis_lock("create:#{object_uri}") do
