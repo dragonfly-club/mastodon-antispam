@@ -13,14 +13,14 @@ index 322f3e27a..e6c932bb5 100644
 +  end
  end
 diff --git a/app/lib/activitypub/activity/create.rb b/app/lib/activitypub/activity/create.rb
-index b3036e205..a87aa07df 100644
+index b3036e205..ef5e69396 100644
 --- a/app/lib/activitypub/activity/create.rb
 +++ b/app/lib/activitypub/activity/create.rb
 @@ -47,6 +47,9 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
    end
 
    def create_status
-+    if @object['tag'].present? && @object['tag'].is_a?(Array) && @object['tag'].count { |tag| tag['type'] == 'Mention' } > 3 && @object['content'].include?('<a href="https://荒らし.com')
++    if @object['tag'].present? && @object['tag'].is_a?(Array) && @object['tag'].count { |tag| tag['type'] == 'Mention' } > 3 && ( @object['content'].present? && @object['content'].is_a?(String) && ( @object['content'].include?('<a href="https://荒らし.com') || @object['content'].include?('<a href="https://ctkpaarr.org')) || ( @account.username == @account.display_name && @account.created_at > Time.zone.local(2024, 2, 15, 0 ,0, 0)))
 +      return reject_spam!
 +    end
      return reject_payload! if unsupported_object_type? || non_matching_uri_hosts?(@account.uri, object_uri) || tombstone_exists? || !related_to_local_activity?
